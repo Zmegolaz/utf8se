@@ -1,0 +1,10 @@
+# Python dependencies for utf8.se.
+#
+# The dataset generators (tools/gen_*.py) and their tests use only the Python
+# standard library (unicodedata, json, re, unittest, ...), so there are no
+# third-party packages to install. This file exists so that
+# `pip install -r requirements.txt` is a valid, no-op step in CI and docs.
+#
+# Requires Python 3.11+ (3.12 is used in CI). Note: the Unicode version of the
+# generated data tracks the Python build's bundled `unicodedata` (3.12 ships
+# Unicode 15.1; 3.14 ships Unicode 16.0).
