@@ -21,6 +21,7 @@ import byteLength from "./modules/byte-length.js";
 import utf8Validator from "./modules/utf8-validator.js";
 import invisibleDetector from "./modules/invisible-detector.js";
 import homoglyphFinder from "./modules/homoglyph-finder.js";
+import homoglyphObfuscator from "./modules/homoglyph-obfuscator.js";
 import unicodeDiff from "./modules/unicode-diff.js";
 import confusables from "./modules/confusables.js";
 import loremRare from "./modules/lorem-rare.js";
@@ -33,6 +34,7 @@ export const MODULES = [
   utf8Validator,
   invisibleDetector,
   homoglyphFinder,
+  homoglyphObfuscator,
   unicodeDiff,
   confusables,
   loremRare,

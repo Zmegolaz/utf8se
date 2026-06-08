@@ -68,6 +68,26 @@ test.describe("Homoglyph Finder", () => {
   });
 });
 
+test.describe("Homoglyph Obfuscator", () => {
+  test("swaps ASCII letters for look-alikes that the Finder folds back", async ({ page }) => {
+    await page.goto("/#/homoglyph-obfuscator");
+    await page.locator(".module-root textarea").fill("admin");
+    // Crank the substitution rate to 100% so every eligible letter is swapped.
+    await page.evaluate(() => {
+      const r = document.querySelector(".module-root input[type=range]");
+      r.value = "100";
+      r.dispatchEvent(new Event("input"));
+    });
+    const out = page.locator(".module-root .hob-output");
+    const text = await out.textContent();
+    // 'a','d','i','n' all have homoglyphs and must be gone ('m' has none, stays).
+    expect(text).not.toMatch(/[adin]/);
+    expect(text).toContain("m");
+    expect(text).not.toBe("admin");
+    await expect(page.locator(".stat .stat-val").first()).toHaveText("4");
+  });
+});
+
 test.describe("Unicode Diff", () => {
   test("detects composed vs decomposed café as NFC-equal", async ({ page }) => {
     await page.goto("/#/unicode-diff");
