@@ -3,6 +3,7 @@
 
 import { MODULES, CATEGORY_ORDER } from "./registry.js";
 import { el, h } from "./lib/dom.js";
+import { renderLicense } from "./license.js";
 
 const byId = Object.fromEntries(MODULES.map((m) => [m.id, m]));
 
@@ -141,6 +142,7 @@ function route() {
   closeMenu();
   const id = location.hash.replace(/^#\//, "");
   if (!id) return renderHome();
+  if (id === "license") return swapView(renderLicense());
   const m = byId[id];
   if (!m) {
     swapView(h.div({}, [

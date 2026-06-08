@@ -138,6 +138,18 @@ button, input, textarea, select {
   color: var(--text-faint);
 }
 .sidebar-foot code { font-family: var(--mono); }
+.sidebar-foot a { color: var(--text-faint); text-decoration: underline; }
+.sidebar-foot a:hover { color: var(--accent); }
+
+.license-text {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+  color: var(--text-dim);
+}
 
 /* ---------- Main content ---------- */
 .main {

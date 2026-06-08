@@ -1,9 +1,15 @@
 # utf8.se, the UTF-8 toolbox
 
+> This project is vibe coded, which is a fancy way of saying nobody
+> understands how it works, least of all the person who shipped it.
+> It works. Probably. On my machine.
+
 A modular collection of browser-based UTF-8 / Unicode tools, generators and
 quirky experiments. **Everything runs client-side**, no backend, no network
 calls, no tracking. The only server-side code is a build-time Python script that
 generates the character database from Python's `unicodedata`.
+
+Licensed under [GPL-3.0](LICENSE). Source: <https://github.com/Zmegolaz/utf8se>
 
 Everything a browser needs lives in **`public/`**, point any static web server
 at that folder and you're done. The repo root holds only things clients never
