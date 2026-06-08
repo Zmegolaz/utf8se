@@ -9,6 +9,8 @@ quirky experiments. **Everything runs client-side**, no backend, no network
 calls, no tracking. The only server-side code is a build-time Python script that
 generates the character database from Python's `unicodedata`.
 
+The site is live at <https://utf8.se/>.
+
 Licensed under [GPL-3.0](LICENSE). Source: <https://github.com/Zmegolaz/utf8se>
 
 Everything a browser needs lives in **`public/`**, point any static web server
