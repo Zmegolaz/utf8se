@@ -117,6 +117,14 @@ export const STYLES = [
     ),
   },
   {
+    id: "flipped",
+    label: "ɟlᴉddǝp",
+    convert: mapStyle(
+      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?!'\"()[]{}<>&_",
+      "ɐqɔpǝɟƃɥᴉɾʞlɯuodbɹsʇnʌʍxʎz∀ᗺƆᗡƎℲפHIſʞ˥WNOԀὉᴚS┴∩ΛMX⅄Z0ƖᘔƐㄣϛ9ㄥ86˙'¿¡,„)(][}{><⅋‾"
+    ),
+  },
+  {
     id: "upsidedown",
     label: "uʍop ǝpᴉsd∩",
     convert: (() => {
