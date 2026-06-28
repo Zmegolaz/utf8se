@@ -107,7 +107,7 @@ test.describe("Unicode Diff", () => {
 
 test("Look-alike Text Writer renders a style gallery", async ({ page }) => {
   await page.goto("/#/confusables");
-  await expect(page.locator(".style-card")).toHaveCount(19); // 17 styles + confusable + zalgo
+  await expect(page.locator(".style-card")).toHaveCount(20); // 18 styles + confusable + zalgo
 });
 
 test("Ancient-Script Lorem Ipsum produces text", async ({ page }) => {
