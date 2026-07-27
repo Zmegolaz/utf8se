@@ -8,7 +8,7 @@
 //   export default {
 //     id:          "byte-length",        // unique, used in the URL hash (#/byte-length)
 //     title:       "Byte-length Calculator",
-//     category:    "Developer Tools",    // groups it in the menu + home page
+//     category:    "Text Tools",    // groups it in the menu + home page
 //     icon:        "📏",                  // emoji shown in menu/cards
 //     description: "One-line summary shown on cards and the view header.",
 //     tags:        ["bytes", "length"],  // optional, improves menu search
@@ -17,7 +17,6 @@
 //   }
 
 import charPicker from "./modules/char-picker.js";
-import glyphShelf from "./modules/glyph-shelf.js";
 import byteLength from "./modules/byte-length.js";
 import utf8Validator from "./modules/utf8-validator.js";
 import invisibleDetector from "./modules/invisible-detector.js";
@@ -27,11 +26,10 @@ import unicodeDiff from "./modules/unicode-diff.js";
 import confusables from "./modules/confusables.js";
 import loremRare from "./modules/lorem-rare.js";
 import unicodeArt from "./modules/unicode-art.js";
-import flex from "./modules/flex.js";
+import kaomojiShelf from "./modules/kaomoji.js";
 
 export const MODULES = [
   charPicker,
-  glyphShelf,
   byteLength,
   utf8Validator,
   invisibleDetector,
@@ -41,12 +39,12 @@ export const MODULES = [
   confusables,
   loremRare,
   unicodeArt,
-  flex,
+  kaomojiShelf,
 ];
 
 // Display order of categories in the menu and on the home page.
 export const CATEGORY_ORDER = [
-  "Developer Tools",
+  "Text Tools",
   "Generators",
   "Fun & Quirky",
 ];

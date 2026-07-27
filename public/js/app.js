@@ -57,6 +57,7 @@ function buildMenu(filter = "") {
           class: "menu-item",
           href: "#/" + m.id,
           dataset: { id: m.id },
+          title: m.description || m.title,
         }, [
           h.span({ class: "mi-icon", text: m.icon || "•" }),
           h.span({ class: "mi-title", text: m.title }),
@@ -69,7 +70,7 @@ function buildMenu(filter = "") {
 }
 
 function highlightActive() {
-  const current = location.hash.replace(/^#\//, "");
+  const current = location.hash.replace(/^#\//, "").split("?")[0];
   dom.menu.querySelectorAll(".menu-item").forEach((a) =>
     a.classList.toggle("active", a.dataset.id === current)
   );
@@ -115,7 +116,7 @@ function swapView(node) {
   window.scrollTo(0, 0);
 }
 
-async function renderModule(m) {
+async function renderModule(m, params) {
   document.title = `${m.title} · utf8.se`;
   const root = h.div({}, [
     h.div({ class: "view-head" }, [
@@ -128,7 +129,7 @@ async function renderModule(m) {
   swapView(root);
 
   try {
-    const result = m.mount(mountPoint);
+    const result = m.mount(mountPoint, params);
     active = m;
     if (result && typeof result.then === "function") await result;
   } catch (e) {
@@ -137,10 +138,19 @@ async function renderModule(m) {
   }
 }
 
+// Split "some-id?a=1&b=2" into { id: "some-id", params: URLSearchParams }.
+// Modules may read `params` (e.g. a shared search query) to restore state.
+function parseHash() {
+  const raw = location.hash.replace(/^#\//, "");
+  const qIdx = raw.indexOf("?");
+  if (qIdx === -1) return { id: raw, params: new URLSearchParams() };
+  return { id: raw.slice(0, qIdx), params: new URLSearchParams(raw.slice(qIdx + 1)) };
+}
+
 function route() {
   highlightActive();
   closeMenu();
-  const id = location.hash.replace(/^#\//, "");
+  const { id, params } = parseHash();
   if (!id) return renderHome();
   if (id === "license") return swapView(renderLicense());
   const m = byId[id];
@@ -152,7 +162,7 @@ function route() {
     ]));
     return;
   }
-  renderModule(m);
+  renderModule(m, params);
 }
 
 /* ---------- Mobile menu ---------- */

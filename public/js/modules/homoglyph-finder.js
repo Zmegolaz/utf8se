@@ -27,10 +27,22 @@ const LANGUAGES = [
   { id: "is", label: "Icelandic", chars: "áðéíóúýþæöÁÐÉÍÓÚÝÞÆÖ" },
 ];
 
+// How a flagged character is rewritten when folding to ASCII.
+// "semantic": its NFKC identity, e.g. bold/italic/monospace "𝟷" -> "1", what
+//   the character actually represents. Falls back to the visual match below
+//   for characters with no such identity (e.g. genuine other-script letters).
+// "visual": the raw UTS #39 anti-spoofing match, e.g. Cyrillic "а" -> "a", but
+//   also monospace digit "𝟷" -> "l" and monospace "𝚖" -> "rn" (the classic
+//   rn/m substitution), chosen for visual collision risk, not identity.
+const FOLD_MODES = [
+  { id: "semantic", label: "Semantic (what it represents)" },
+  { id: "visual", label: "Visual / security match (UTS #39)" },
+];
+
 export default {
   id: "homoglyph-finder",
   title: "Homoglyph Finder",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "🕵️",
   description: "Detect look-alike characters used to spoof URLs and usernames (Cyrillic 'а' posing as Latin 'a'), then fold them back to ASCII. Pick your language so its own letters (e.g. Swedish å ä ö) are kept as legitimate.",
   tags: ["homoglyph", "confusable", "spoof", "phishing", "security", "ascii", "punycode", "idn", "language", "swedish", "accents", "locale"],
@@ -58,6 +70,12 @@ export default {
     // Expected language: its letters are allowed (never flagged/folded).
     let langId = "";
     let allowedSet = new Set();
+
+    // What a flagged character folds to, see FOLD_MODES above.
+    let foldMode = "semantic";
+    function foldTarget(info) {
+      return foldMode === "semantic" && info.semantic ? info.semantic : info.ascii;
+    }
     const currentLang = () => LANGUAGES.find((l) => l.id === langId);
     function rebuildAllowed() {
       const lang = currentLang();
@@ -134,9 +152,10 @@ export default {
             text: ch,
           }));
         } else if (info && enabledScripts.has(info.script)) {
+          const semanticNote = info.semantic && info.semantic !== info.ascii ? `, represents “${info.semantic}”` : "";
           highlighted.appendChild(h.span({
             class: "hg-mark",
-            title: `${info.name} (${codePointHex(cp)}), ${info.script}, looks like “${info.ascii}”`,
+            title: `${info.name} (${codePointHex(cp)}), ${info.script}, looks like “${info.ascii}”${semanticNote}`,
             text: ch,
           }));
         } else {
@@ -187,7 +206,7 @@ export default {
         list.appendChild(h.div({ class: "hg-row" }, [
           h.span({ class: "hg-glyph", text: f.ch }),
           h.span({ class: "hg-arrow", text: "→" }),
-          h.span({ class: "hg-ascii mono", text: f.info.ascii }),
+          h.span({ class: "hg-ascii mono", text: foldTarget(f.info) }),
           h.span({ class: "mono faint", text: codePointHex(f.cp) }),
           h.span({ text: f.info.name }),
           h.span({ class: "hg-script", text: f.info.script }),
@@ -219,7 +238,7 @@ export default {
       for (const ch of text) {
         const cp = ch.codePointAt(0);
         const info = data.map.get(cp);
-        if (info && !isAllowed(cp, info) && enabledScripts.has(info.script)) { out += info.ascii; changed = true; }
+        if (info && !isAllowed(cp, info) && enabledScripts.has(info.script)) { out += foldTarget(info); changed = true; }
         else out += ch; // plain, or a letter the chosen language keeps as legitimate
       }
       const copyBtn = h.button({ class: "btn", text: "Copy ASCII" });
@@ -236,6 +255,11 @@ export default {
     langSelect.value = langId;
     langSelect.addEventListener("change", () => { langId = langSelect.value; rebuildAllowed(); analyze(); });
 
+    const foldSelect = el("select");
+    for (const f of FOLD_MODES) foldSelect.appendChild(el("option", { value: f.id, text: f.label }));
+    foldSelect.value = foldMode;
+    foldSelect.addEventListener("change", () => { foldMode = foldSelect.value; analyze(); });
+
     input.addEventListener("input", debounce(analyze, 100));
 
     root.append(
@@ -244,9 +268,15 @@ export default {
           h.span({ class: "lbl", text: "String to check" }),
           input,
         ]),
-        el("label", { class: "field", style: { marginBottom: "0", maxWidth: "360px" } }, [
-          h.span({ class: "lbl", text: "Expected language (its letters are kept as legitimate)" }),
-          langSelect,
+        h.div({ class: "row" }, [
+          el("label", { class: "field", style: { marginBottom: "0" } }, [
+            h.span({ class: "lbl", text: "Expected language (its letters are kept as legitimate)" }),
+            langSelect,
+          ]),
+          el("label", { class: "field", style: { marginBottom: "0" } }, [
+            h.span({ class: "lbl", text: "Fold to ASCII using" }),
+            foldSelect,
+          ]),
         ]),
       ]),
       scriptChips,

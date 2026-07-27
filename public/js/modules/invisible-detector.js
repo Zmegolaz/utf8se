@@ -7,7 +7,7 @@ import { inspect, placeholderFor, CATEGORY_META, codePointHex } from "../lib/inv
 export default {
   id: "invisible-detector",
   title: "Invisible Character Detector",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "👻",
   description: "Reveal zero-width spaces, soft hyphens, bidi marks and other hidden characters lurking in copy-pasted text.",
   tags: ["zero-width", "hidden", "whitespace", "bom", "bidi", "soft hyphen", "debug", "invisible"],

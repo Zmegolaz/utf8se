@@ -12,13 +12,24 @@ Output: public/data/homoglyphs.json
       "confusablesVersion": "17.0.0",
       "unicodeVersion": "16.0.0",
       "scripts": ["Cyrillic", "Greek", ...],
-      "entries": [[srcCodePoint, "asciiSkeleton", scriptIdx, "SOURCE NAME"], ...]
+      "entries": [[srcCodePoint, "asciiSkeleton", scriptIdx, "SOURCE NAME", semantic], ...]
     }
 
-`asciiSkeleton` is the printable-ASCII string the source folds to (usually one
-char, occasionally several, e.g. the ﬁ ligature → "fi"). Only sources whose
+`asciiSkeleton` is the printable-ASCII string the source folds to per UTS #39
+(usually one char, occasionally several, e.g. the ﬁ ligature -> "fi"). This is
+a *visual/security* mapping: chosen by the Unicode Consortium for what a
+character could be mistaken for, not what it "is". Only sources whose
 fully-resolved skeleton is pure printable ASCII are included, which keeps the
 file to the security-relevant subset and the size small.
+
+`semantic` is a second, independent mapping: the character's own NFKC
+compatibility decomposition, when that decomposition is itself pure printable
+ASCII, else null. This captures "what the character actually represents" for
+styled/compatibility variants (e.g. MATHEMATICAL MONOSPACE DIGIT ONE -> "1",
+not the visual-collision "l" that UTS #39 uses), and is null for characters
+with no such identity, e.g. genuine other-script letters like Cyrillic а,
+which don't decompose to "a", they're just a different letter that looks
+alike.
 """
 import json
 import os
@@ -126,7 +137,9 @@ def main():
         except ValueError:
             continue  # skip unnamed/unassigned in our Unicode version
         script = lookup(scripts, src, "Unknown")
-        entries.append([src, skel, sidx(script), name])
+        nfkc = unicodedata.normalize("NFKC", chr(src))
+        semantic = nfkc if nfkc != chr(src) and all(ASCII_LO <= ord(c) <= ASCII_HI for c in nfkc) else None
+        entries.append([src, skel, sidx(script), name, semantic])
 
     def invert(table):
         out = [None] * len(table)

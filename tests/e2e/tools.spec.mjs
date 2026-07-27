@@ -62,7 +62,7 @@ test.describe("Homoglyph Finder", () => {
     const out = page.locator(".module-root .output-box");
     await page.locator(".module-root textarea").fill("ışık"); // Turkish; dotless ı is a confusable of 'i'
     await expect(out).toHaveText("işik"); // default ASCII-only folds ı -> i
-    await page.locator(".module-root select").selectOption("tr");
+    await page.getByLabel("Expected language").selectOption("tr");
     await expect(out).toHaveText("ışık"); // Turkish: ı kept, nothing folded
     await expect(page.locator(".notice.ok").filter({ hasText: "kept as legitimate" })).toBeVisible();
   });
@@ -139,11 +139,4 @@ test("Unicode Art Generator converts an image to text art", async ({ page }) => 
   expect(text.split("\n").length).toBeGreaterThan(10);
   // distinct glyphs => actual shading, not a blank canvas
   expect(new Set(text.replace(/\s/g, "")).size).toBeGreaterThan(2);
-});
-
-test("Flex page renders prose with no stray ASCII code-point tokens", async ({ page }) => {
-  await page.goto("/#/flex");
-  await expect(page.locator(".flex-title")).not.toBeEmpty();
-  const body = await page.locator(".flex-body").textContent();
-  expect(body).not.toMatch(/\+00\d\d/); // e.g. the old "U+0041" artifact
 });
