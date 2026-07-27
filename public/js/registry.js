@@ -17,6 +17,7 @@
 //   }
 
 import charPicker from "./modules/char-picker.js";
+import glyphShelf from "./modules/glyph-shelf.js";
 import byteLength from "./modules/byte-length.js";
 import utf8Validator from "./modules/utf8-validator.js";
 import invisibleDetector from "./modules/invisible-detector.js";
@@ -30,6 +31,7 @@ import flex from "./modules/flex.js";
 
 export const MODULES = [
   charPicker,
+  glyphShelf,
   byteLength,
   utf8Validator,
   invisibleDetector,
