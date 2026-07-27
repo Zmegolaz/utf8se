@@ -43,12 +43,10 @@ const QUICK_PICKS = [
   0x2014, 0x2013, 0x2026, 0x201c, 0x201d, 0x2018, 0x2019, 0xab, 0xbb, 0xa7,
   0xb6, 0xa9, 0xae, 0x2122, 0x2116, 0x2022, 0x2023, 0x203d, 0xb7,
   // Stars, shapes & checks
-  0x2605, 0x2606, 0x25cf, 0x25cb, 0x25c6, 0x25c7, 0x25a0, 0x25a1, 0x25b2, 0x25bc,
-  0x25b6, 0x25c0, 0x2666, 0x2665, 0x2660, 0x2663, 0x2713, 0x2714, 0x2717, 0x2718,
-  0x2611, 0x2612,
+  0x25b2, 0x25bc, 0x25b6, 0x25c0, 0x2666, 0x2665, 0x2660, 0x2663,
+  0x2713, 0x2714, 0x2717, 0x2718, 0x2611, 0x2612,
   // Weather & misc symbols
-  0x2600, 0x2601, 0x2602, 0x2603, 0x26a1, 0x262f, 0x26a0, 0x2699, 0x2693, 0x2708,
-  0x231b, 0x260e, 0x2709, 0x2690, 0x2615, 0x2702,
+  0x2699,
 ];
 
 // Expand a formulaic range [start,end,template,...] into entry objects, lazily
@@ -101,11 +99,13 @@ export default {
 
     const catSelect = el("select");
     catSelect.appendChild(el("option", { value: "", text: "All categories" }));
-    // Group selectable categories present in the data, with long names.
-    [...new Set(data.chars.map((c) => c[2]))].sort((a, b) => a - b).forEach((gi) => {
-      const code = data.categoryOrder[gi];
-      catSelect.appendChild(el("option", { value: code, text: `${data.categories[code] || code} (${code})` }));
-    });
+    // Categories present in the data, alphabetically by their long name.
+    [...new Set(data.chars.map((c) => c[2]))]
+      .map((gi) => data.categoryOrder[gi])
+      .sort((a, b) => (data.categories[a] || a).localeCompare(data.categories[b] || b))
+      .forEach((code) => {
+        catSelect.appendChild(el("option", { value: code, text: `${data.categories[code] || code} (${code})` }));
+      });
 
     const scriptSelect = el("select");
     scriptSelect.appendChild(el("option", { value: "", text: "All scripts" }));
@@ -119,7 +119,7 @@ export default {
     }
 
     const count = h.div({ class: "faint", style: { fontSize: "0.85rem", margin: "4px 0 12px" } });
-    const grid = h.div({ class: "char-grid" });
+    const sections = h.div({});
     const detail = h.div({ class: "char-detail" });
 
     // ---- Search ----
@@ -190,8 +190,14 @@ export default {
       if (location.hash !== hash) history.replaceState(null, "", hash);
     }
 
+    // The long category name a result belongs to, e.g. "Currency Symbol".
+    function categoryName(r) {
+      const code = data.categoryOrder[r.gc];
+      return data.categories[code] || code;
+    }
+
     function renderResults(results, hasFilter) {
-      grid.innerHTML = "";
+      sections.innerHTML = "";
       if (!results.length) {
         count.textContent = "No characters match.";
         return;
@@ -199,16 +205,34 @@ export default {
       count.textContent = hasFilter
         ? `Showing ${num(results.length)}${results.length >= CAP ? "+" : ""} character${results.length === 1 ? "" : "s"}.`
         : `${num(results.length)} handy symbols to get you started. Search, or filter by category/script, to browse all 150,000+ characters.`;
-      const frag = document.createDocumentFragment();
+
+      // Group into categories present among the results, alphabetically.
+      const groups = new Map(); // category name -> results[]
       for (const r of results) {
-        const cell = h.button({ class: "char-cell", title: r.name }, [
-          h.div({ class: "char-glyph", text: String.fromCodePoint(r.cp) }),
-          h.div({ class: "char-cp", text: codePointHex(r.cp) }),
-        ]);
-        cell.addEventListener("click", () => { copy(String.fromCodePoint(r.cp)); showDetail(r); });
-        frag.appendChild(cell);
+        const name = categoryName(r);
+        if (!groups.has(name)) groups.set(name, []);
+        groups.get(name).push(r);
       }
-      grid.appendChild(frag);
+
+      const frag = document.createDocumentFragment();
+      [...groups.keys()].sort((a, b) => a.localeCompare(b)).forEach((name) => {
+        const catGrid = h.div({ class: "char-grid" });
+        const catFrag = document.createDocumentFragment();
+        for (const r of groups.get(name)) {
+          const cell = h.button({ class: "char-cell", title: r.name }, [
+            h.div({ class: "char-glyph", text: String.fromCodePoint(r.cp) }),
+            h.div({ class: "char-cp", text: codePointHex(r.cp) }),
+          ]);
+          cell.addEventListener("click", () => { copy(String.fromCodePoint(r.cp)); showDetail(r); });
+          catFrag.appendChild(cell);
+        }
+        catGrid.appendChild(catFrag);
+        frag.appendChild(h.div({ class: "char-section" }, [
+          h.h3({ class: "char-section-title", text: name }),
+          catGrid,
+        ]));
+      });
+      sections.appendChild(frag);
     }
 
     function showDetail(r) {
@@ -222,7 +246,7 @@ export default {
             h.div({}, [
               h.div({ class: "detail-name", text: r.name }),
               h.div({ class: "faint mono", style: { marginTop: "4px" } }, [
-                `${codePointHex(r.cp)} · ${data.categories[data.categoryOrder[r.gc]] || data.categoryOrder[r.gc]} · ${data.scripts[r.sc]} · ${data.blocks[r.bl].replace(/_/g, " ")}`,
+                `${codePointHex(r.cp)} · ${categoryName(r)} · ${data.scripts[r.sc]} · ${data.blocks[r.bl].replace(/_/g, " ")}`,
               ]),
               h.div({ class: "faint mono", style: { marginTop: "2px" }, text: `UTF-8: ${bytes}   ·   HTML: &#${r.cp};   ·   JS: \\u{${r.cp.toString(16)}}` }),
             ]),
@@ -246,8 +270,10 @@ export default {
       ]),
       detail,
       count,
-      grid,
+      sections,
       el("style", { text: `
+        .char-section { margin-bottom: 26px; }
+        .char-section-title { font-size: 0.95rem; color: var(--text-dim); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.04em; }
         .char-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); gap:8px; }
         .char-cell { background:var(--bg-elev); border:1px solid var(--border-soft); border-radius:var(--radius-sm); padding:10px 4px 6px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; transition:border-color .12s, transform .05s; }
         .char-cell:hover { border-color:var(--accent); }
