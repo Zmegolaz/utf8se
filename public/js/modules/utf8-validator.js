@@ -64,7 +64,7 @@ function analyzeUtf8(bytes) {
 export default {
   id: "utf8-validator",
   title: "UTF-8 Validator",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "✅",
   description: "Check whether a sequence of bytes is valid UTF-8. Paste hex, base64 or text and get a byte-level verdict.",
   tags: ["validate", "decode", "bytes", "hex", "base64", "verify"],

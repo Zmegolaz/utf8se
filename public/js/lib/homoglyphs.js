@@ -12,10 +12,14 @@ export function loadHomoglyphs() {
     promise = fetch(URL)
       .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
       .then((d) => {
-        // cp -> { ascii, script, name }
+        // cp -> { ascii, semantic, script, name }
+        // `ascii` is the UTS #39 visual/security fold (what it could pass for).
+        // `semantic` is its NFKC identity when that's pure ASCII (what it
+        // actually represents), or null if it has none, e.g. a genuine
+        // other-script letter.
         d.map = new Map();
-        for (const [cp, ascii, sidx, name] of d.entries) {
-          d.map.set(cp, { ascii, script: d.scripts[sidx], name });
+        for (const [cp, ascii, sidx, name, semantic] of d.entries) {
+          d.map.set(cp, { ascii, semantic, script: d.scripts[sidx], name });
         }
         DATA = d;
         return d;

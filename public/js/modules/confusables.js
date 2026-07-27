@@ -13,7 +13,7 @@ export default {
 
   mount(root) {
     const input = el("textarea", { spellcheck: "false", placeholder: "Type something..." });
-    input.value = "The quick brown fox";
+    input.value = "The quick brown fox jumps over the lazy dog, O123456789";
 
     const gallery = h.div({ class: "style-gallery" });
 

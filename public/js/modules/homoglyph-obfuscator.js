@@ -31,7 +31,7 @@ function mulberry32(a) {
 export default {
   id: "homoglyph-obfuscator",
   title: "Homoglyph Obfuscator",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "🥸",
   description: "The reverse of the Homoglyph Finder: swap letters for look-alike Unicode confusables so text reads the same but is a different byte sequence. Tune the substitution rate and script, then paste the result into the Finder to undo it.",
   tags: ["homoglyph", "confusable", "obfuscate", "spoof", "phishing", "security", "unicode", "lookalike", "idn", "punycode", "test"],

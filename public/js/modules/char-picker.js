@@ -19,6 +19,38 @@ function loadData() {
   return loadPromise;
 }
 
+// A hand-picked starter set shown when nothing is searched, so the default
+// view isn't just the first few hundred code points in Unicode order (mostly
+// controls and Latin punctuation). Grouped here only for readability; display
+// order follows this same flat order. Actual name/category/script/block for
+// each is looked up from the loaded dataset, so it always matches the rest of
+// the picker.
+const QUICK_PICKS = [
+  // Arrows
+  0x2190, 0x2192, 0x2191, 0x2193, 0x2194, 0x2195, 0x2196, 0x2197, 0x2198, 0x2199,
+  0x21d0, 0x21d2, 0x21d1, 0x21d3, 0x21d4, 0x21d5, 0x21a9, 0x21aa, 0x21ba, 0x21bb,
+  0x279c, 0x27a4, 0x21e2, 0x21a6,
+  // Math & units
+  0xb1, 0xd7, 0xf7, 0x3d, 0x2260, 0x2248, 0x2261, 0x2264, 0x2265, 0x221e,
+  0x221a, 0x221b, 0x2211, 0x220f, 0x222b, 0x2202, 0x2206, 0x2205, 0x2208, 0x2209,
+  0x2282, 0x222a, 0x2229, 0x2234, 0xb0, 0x2032, 0x2033, 0x2103, 0x2109, 0x25, 0x2030,
+  // Fractions & sub/superscript
+  0xbd, 0x2153, 0x2154, 0xbc, 0xbe, 0x2155, 0x215b, 0x215c, 0x215d, 0x215e,
+  0xb9, 0xb2, 0xb3, 0x207f, 0x2080, 0x2081, 0x2082, 0x2093,
+  // Currency
+  0x24, 0x20ac, 0xa3, 0xa5, 0xa2, 0x20b9, 0x20a9, 0x20bd, 0x20bf, 0x20ba, 0x20b4, 0x20a6,
+  // Punctuation & typography
+  0x2014, 0x2013, 0x2026, 0x201c, 0x201d, 0x2018, 0x2019, 0xab, 0xbb, 0xa7,
+  0xb6, 0xa9, 0xae, 0x2122, 0x2116, 0x2022, 0x2023, 0x203d, 0xb7,
+  // Stars, shapes & checks
+  0x2605, 0x2606, 0x25cf, 0x25cb, 0x25c6, 0x25c7, 0x25a0, 0x25a1, 0x25b2, 0x25bc,
+  0x25b6, 0x25c0, 0x2666, 0x2665, 0x2660, 0x2663, 0x2713, 0x2714, 0x2717, 0x2718,
+  0x2611, 0x2612,
+  // Weather & misc symbols
+  0x2600, 0x2601, 0x2602, 0x2603, 0x26a1, 0x262f, 0x26a0, 0x2699, 0x2693, 0x2708,
+  0x231b, 0x260e, 0x2709, 0x2690, 0x2615, 0x2702,
+];
+
 // Expand a formulaic range [start,end,template,...] into entry objects, lazily
 // and capped. Template "{X}" is replaced by the hex code point.
 function* expandRange(range, limit) {
@@ -37,12 +69,12 @@ function* expandRange(range, limit) {
 export default {
   id: "char-picker",
   title: "Character Picker",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "🔎",
   description: "Search 150,000+ Unicode characters by name, filter by category, or browse by script. Click to copy.",
   tags: ["search", "find", "character", "emoji", "symbol", "unicode", "name", "script"],
 
-  async mount(root) {
+  async mount(root, params) {
     const loading = h.div({ class: "notice info", text: "Loading the Unicode database..." });
     root.appendChild(loading);
 
@@ -62,6 +94,7 @@ export default {
 
     const catIndexByCode = Object.fromEntries(data.categoryOrder.map((c, i) => [c, i]));
     const scriptIndexByName = Object.fromEntries(data.scripts.map((s, i) => [s, i]));
+    const cpIndex = new Map(data.chars.map((c) => [c[0], c]));
 
     // ---- Controls ----
     const searchBox = el("input", { type: "text", placeholder: "Search by name... (e.g. “heart”, “arrow”, “snowman”)", spellcheck: "false" });
@@ -78,6 +111,13 @@ export default {
     scriptSelect.appendChild(el("option", { value: "", text: "All scripts" }));
     [...data.scripts].sort().forEach((s) => scriptSelect.appendChild(el("option", { value: s, text: s })));
 
+    // Restore a shared search from the URL, e.g. #/char-picker?q=heart&cat=So
+    if (params) {
+      if (params.get("q")) searchBox.value = params.get("q");
+      if (params.get("cat")) catSelect.value = params.get("cat");
+      if (params.get("script")) scriptSelect.value = params.get("script");
+    }
+
     const count = h.div({ class: "faint", style: { fontSize: "0.85rem", margin: "4px 0 12px" } });
     const grid = h.div({ class: "char-grid" });
     const detail = h.div({ class: "char-detail" });
@@ -87,6 +127,17 @@ export default {
       const q = searchBox.value.trim().toLowerCase();
       const catCode = catSelect.value;
       const scriptName = scriptSelect.value;
+
+      if (!q && !catCode && !scriptName) {
+        const picks = QUICK_PICKS
+          .map((cp) => cpIndex.get(cp))
+          .filter(Boolean)
+          .map((c) => ({ cp: c[0], name: c[1], gc: c[2], sc: c[3], bl: c[4] }));
+        renderResults(picks, false);
+        syncUrl();
+        return;
+      }
+
       const catIdx = catCode ? catIndexByCode[catCode] : null;
       const scIdx = scriptName ? scriptIndexByName[scriptName] : null;
       const hexQuery = /^(u\+)?[0-9a-f]{2,6}$/i.test(q) ? parseInt(q.replace(/^u\+/i, ""), 16) : null;
@@ -121,7 +172,22 @@ export default {
         for (const e of expandRange(range, CAP - results.length)) results.push(e);
       }
 
-      renderResults(results, q || catCode || scriptName);
+      renderResults(results, true);
+      syncUrl();
+    }
+
+    // Keep the URL hash in sync with the current search so it can be shared.
+    // Uses replaceState (not location.hash=) so it doesn't add history entries
+    // or trigger a re-mount on every keystroke.
+    function syncUrl() {
+      const sp = new URLSearchParams();
+      const q = searchBox.value.trim();
+      if (q) sp.set("q", q);
+      if (catSelect.value) sp.set("cat", catSelect.value);
+      if (scriptSelect.value) sp.set("script", scriptSelect.value);
+      const qs = sp.toString();
+      const hash = "#/char-picker" + (qs ? "?" + qs : "");
+      if (location.hash !== hash) history.replaceState(null, "", hash);
     }
 
     function renderResults(results, hasFilter) {
@@ -130,7 +196,9 @@ export default {
         count.textContent = "No characters match.";
         return;
       }
-      count.textContent = `Showing ${num(results.length)}${results.length >= CAP ? "+" : ""} character${results.length === 1 ? "" : "s"}${hasFilter ? "" : " (start typing to search)"}.`;
+      count.textContent = hasFilter
+        ? `Showing ${num(results.length)}${results.length >= CAP ? "+" : ""} character${results.length === 1 ? "" : "s"}.`
+        : `${num(results.length)} handy symbols to get you started. Search, or filter by category/script, to browse all 150,000+ characters.`;
       const frag = document.createDocumentFragment();
       for (const r of results) {
         const cell = h.button({ class: "char-cell", title: r.name }, [

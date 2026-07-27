@@ -46,7 +46,7 @@ function simpleDiff(A, B) {
 export default {
   id: "unicode-diff",
   title: "Unicode Diff",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "🔬",
   description: "Compare two strings that look identical but aren't. Pinpoints the differing code points and explains them, invisible characters, homoglyphs, normalization.",
   tags: ["diff", "compare", "normalize", "nfc", "homoglyph", "identical", "equal"],

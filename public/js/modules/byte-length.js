@@ -22,7 +22,7 @@ function graphemeCount(str) {
 export default {
   id: "byte-length",
   title: "Byte-length Calculator",
-  category: "Developer Tools",
+  category: "Text Tools",
   icon: "📏",
   description: "Measure a string across UTF-8 / UTF-16 / UTF-32, code points and graphemes, handy when fitting text into DB column limits.",
   tags: ["bytes", "length", "varchar", "size", "encoding", "database"],
